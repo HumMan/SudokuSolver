@@ -5,13 +5,13 @@
 
 #define SIZE 9
 #define QUAD_SIZE 3
+#define ALL_NUMS 1022
 
 #include <math.h>
 #include <assert.h>
 #include <cstring>
 #include <iostream>
 
-static wchar_t buf[256];
 typedef int TSource[SIZE][SIZE];
 
 
@@ -28,7 +28,8 @@ void TSol::Add(int val)
 {
 	assert(val >= 1 && val <= 9);
 	int t = 1 << (val);
-	if (v&t)return;
+	if (v&t)
+		return;
 	high++;
 	v |= t;
 }
@@ -36,9 +37,11 @@ void TSol::Remove(int& sol_need, int val)
 {
 	assert(val >= 1 && val <= 9);
 	int t = 1 << (val);
-	if (!(v&t))return;
+	if (!(v&t))
+		return;
 	high--;
-	if (high == 0)sol_need--;
+	if (high == 0)
+		sol_need--;
 	v ^= t;
 }
 int TSol::High()
@@ -72,70 +75,38 @@ int TSudoku::BitCount(int v)
 
 void TSudoku::InitCellSolutions(int i, int k)
 {
+	//цифры которые есть в соседних ячейках
 	int mask = 0;
+
+	//строка
 	for (int f = 0; f < SIZE; f++)
-		if (sol[i][f].high == 0) mask |= sol[i][f].v;
+		if (sol[i][f].high == 0)
+			mask |= sol[i][f].v;
+
+	//столбец
 	for (int f = 0; f < SIZE; f++)
-		if (sol[f][k].high == 0) mask |= sol[f][k].v;
+		if (sol[f][k].high == 0)
+			mask |= sol[f][k].v;
+
+	//квадрат
 	int min_i = (i / QUAD_SIZE) * QUAD_SIZE;
 	int min_k = (k / QUAD_SIZE) * QUAD_SIZE;
 	for (int ii = min_i; ii < min_i + 3; ii++)
 	{
-		if (sol[ii][min_k + 0].high == 0) mask |= sol[ii][min_k + 0].v;
-		if (sol[ii][min_k + 1].high == 0) mask |= sol[ii][min_k + 1].v;
-		if (sol[ii][min_k + 2].high == 0) mask |= sol[ii][min_k + 2].v;
+		if (sol[ii][min_k + 0].high == 0)
+			mask |= sol[ii][min_k + 0].v;
+		if (sol[ii][min_k + 1].high == 0)
+			mask |= sol[ii][min_k + 1].v;
+		if (sol[ii][min_k + 2].high == 0)
+			mask |= sol[ii][min_k + 2].v;
 	}
-	mask = (~mask) & 1022;
+	//из цифр которые есть в соседних ячейках преобразуем в отсутствующие
+	//ALL_NUMS - битовая маска для вариантов чисел от 1 до 9
+	mask = (~mask) & ALL_NUMS;
 	sol[i][k].v = (mask);
 	sol[i][k].high = (BitCount(mask)) - 1;
 }
-bool TSudoku::InitCellsSolutions()
-{
-	//
-	int row[SIZE], col[SIZE], quad[QUAD_SIZE][QUAD_SIZE];
-	for (int i = 0; i < SIZE; i++)
-	{
-		row[i] = 0;
-		for (int f = 0; f < SIZE; f++)
-			if (sol[i][f].high == 0) row[i] |= sol[i][f].v;
-	}
-	for (int k = 0; k < SIZE; k++)
-	{
-		col[k] = 0;
-		for (int f = 0; f < SIZE; f++)
-			if (sol[f][k].high == 0) col[k] |= sol[f][k].v;
-	}
-	for (int i = 0; i < QUAD_SIZE; i++)
-	{
-		for (int k = 0; k < QUAD_SIZE; k++)
-		{
-			int min_i = i * QUAD_SIZE;
-			int min_k = k * QUAD_SIZE;
-			quad[i][k] = 0;
-			for (int ii = min_i; ii < min_i + 3; ii++)
-			{
-				if (sol[ii][min_k + 0].high == 0) quad[i][k] |= sol[ii][min_k + 0].v;
-				if (sol[ii][min_k + 1].high == 0) quad[i][k] |= sol[ii][min_k + 1].v;
-				if (sol[ii][min_k + 2].high == 0) quad[i][k] |= sol[ii][min_k + 2].v;
-			}
-		}
-	}
-	int mask;
-	for (int i = 0; i < SIZE; i++)
-	{
-		for (int k = 0; k < SIZE; k++)
-			if (sol[i][k].high != 0)
-			{
-				mask = (~(row[i] | col[k] | quad[i / 3][k / 3])) & 1022;
-				sol[i][k].v = mask;
-				sol[i][k].high = (BitCount(mask)) - 1;
-				if (sol[i][k].high == 0)sol_need--;
-				if (sol[i][k].v == 0)
-					return false;
-			}
-	}
-	return true;
-}
+
 void TSudoku::ValidateRow(int i)
 {
 	//проверяем встречается ли потенциальное число в строке один раз
@@ -158,7 +129,7 @@ void TSudoku::ValidateRow(int i)
 					else
 					{
 						found = NULL;
-						goto end_search;
+						break;
 					}
 				}
 			}
@@ -166,10 +137,10 @@ void TSudoku::ValidateRow(int i)
 			{
 				assert(sol[i][k].high == 0);
 				if (sol[i][k].Exists(n))
-					goto end_search;
+					break;
 			}
 		}
-	end_search:
+
 		if (found != NULL)
 		{
 			sol_need--;
@@ -197,7 +168,7 @@ void TSudoku::ValidateCol(int k)
 					else
 					{
 						found = NULL;
-						goto end_search;
+						break;
 					}
 				}
 			}
@@ -205,10 +176,10 @@ void TSudoku::ValidateCol(int k)
 			{
 				assert(sol[i][k].high == 0);
 				if (sol[i][k].Exists(n))
-					goto end_search;
+					break;
 			}
 		}
-	end_search:
+
 		if (found != NULL)
 		{
 			sol_need--;
@@ -279,8 +250,145 @@ void TSudoku::ValidateRows()
 void TSudoku::ValidateCols()
 {
 	for (int k = 0; k < SIZE; k++)
-		ValidateRow(k);
+		ValidateCol(k);
 }
+
+void DeleteNumFromRow(TSol source[SIZE], int num, int except)
+{
+	int sol_need = 0;
+	for (int i = 0; i < SIZE; i++)
+		if (i != except)
+			source[i].Remove(sol_need, num);
+}
+
+bool NumExists(TSol source[SIZE], int num)
+{
+	int sol_need = 0;
+	for (int i = 0; i < SIZE; i++)
+		if (source[i].high == 0)
+			if (source[i].Exists(num))
+				return true;
+	return false;
+}
+
+bool AnyVariants(TSol source[SIZE])
+{
+	int sol_need = 0;
+	for (int i = 0; i < SIZE; i++)
+		if (source[i].high < 0)
+			return false;
+	return true;
+}
+
+bool EnumVariants(TSol sols[SIZE])
+{
+	for (int row = 0; row < SIZE; row++)
+	{
+		if (sols[row].high > 0)
+		{
+			for (int n = 1; n <= SIZE; n++)
+			{
+				if (sols[row].Exists(n))
+				{
+					TSol sub_sols[SIZE];
+					memcpy(sub_sols, sols, sizeof(TSol)*SIZE);
+					sub_sols[row].Clear();
+					sub_sols[row].Add(n);
+
+					DeleteNumFromRow(sub_sols, n, row);
+
+					if (AnyVariants(sub_sols) && EnumVariants(sub_sols))
+						return true;
+				}
+			}
+		}
+		else if (sols[row].high < 0)
+			return false;
+	}
+
+	for (int row = 0; row < SIZE; row++)
+	{
+		if (sols[row].high < 0)
+			return false;
+
+		for (int row1 = row + 1; row1 < SIZE; row1++)
+		{
+			if (sols[row].v == sols[row1].v)
+				return false;
+		}
+	}
+	return true;
+}
+
+void ExtractColumn(TSol source[SIZE][SIZE], int column_index, TSol dest[SIZE])
+{
+	for (int i = 0; i < SIZE; i++)
+		dest[i] = source[i][column_index];
+}
+
+void ExtractRow(TSol source[SIZE][SIZE], int row_index, TSol dest[SIZE])
+{
+	for (int i = 0; i < SIZE; i++)
+		dest[i] = source[row_index][i];
+}
+
+void TSudoku::NakedInColumns()
+{
+	for (int column = 0; column < SIZE; column++)
+	{
+		for (int row = 0; row < SIZE; row++)
+		{
+			if (sol[row][column].high > 0)
+			{
+				for (int n = 1; n <= SIZE; n++)
+				{
+					if (sol[row][column].Exists(n))
+					{
+						TSol sub_column_sols[SIZE];
+						ExtractColumn(sol, column, sub_column_sols);
+						sub_column_sols[row].Clear();
+						sub_column_sols[row].Add(n);
+
+						if (!EnumVariants(sub_column_sols))
+						{
+							sol[row][column].Remove(sol_need, n);
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+void TSudoku::NakedInRows()
+{
+
+	for (int row = 0; row < SIZE; row++)
+	{
+		for (int column = 0; column < SIZE; column++)
+		{
+			if (sol[row][column].high > 0)
+			{
+				for (int n = 1; n <= SIZE; n++)
+				{
+					if (sol[row][column].Exists(n))
+					{
+						TSol sub_column_sols[SIZE];
+						ExtractRow(sol, row, sub_column_sols);
+						sub_column_sols[column].Clear();
+						sub_column_sols[column].Add(n);
+
+						if (!EnumVariants(sub_column_sols))
+						{
+							sol[row][column].Remove(sol_need, n);
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
 void TSudoku::RemoveNumFromRow(int i, int num, int exclude_min, int exclude_max)
 {
 	for (int f = 0; f < SIZE; f++)
@@ -388,7 +496,7 @@ void TSudoku::Init(TSource* source)
 			else
 			{
 				sol[i][k].high = 8;
-				sol[i][k].v = 1022;
+				sol[i][k].v = ALL_NUMS;
 			}
 		}
 	}
@@ -400,7 +508,9 @@ void TSudoku::Init(TSol* use_sol, int use_sol_need)
 	memcpy(&sol, use_sol, SIZE*SIZE * sizeof(TSol));
 }
 
-bool TSudoku::BuildSubLevel(TSolution* &result)
+long long sols_count = 0;
+
+bool TSudoku::BuildSubLevel(TSolution* &result, bool first_level)
 {
 #ifndef NDEBUG
 	{
@@ -408,8 +518,7 @@ bool TSudoku::BuildSubLevel(TSolution* &result)
 		ConvertToResult(&sol, &result);
 	}
 #endif
-
-	TSudoku sub_level;
+		
 	TCountTableElement table[SIZE];
 	for (int i = 0; i < SIZE; i++)
 	{
@@ -417,45 +526,73 @@ bool TSudoku::BuildSubLevel(TSolution* &result)
 			if (sol[i][k].high > 0)
 				table[sol[i][k].High()].Add(&sol[i][k]);
 	}
-	for (int c = 1; c < SIZE; c++)
+	int total = 0;
+	if (first_level)
+	{
+		
+		for (int c = 1; c < SIZE; c++)
+		{
+			for (int t = 1; t <= table[c].high; t++)
+			{
+				total += table[c].sols[t]->high;
+			}
+		}
+		printf("Bruteforcing variations = %i\n", total);
+	}
+	for (int c = 1; c < SIZE ; c++)
 	{
 		for (int t = 1; t <= table[c].high; t++)
 		{
 			for (int n = 1; n <= SIZE; n++)
 				if (table[c].sols[t]->Exists(n))
 				{
-					TSol temp = *table[c].sols[t];
-					table[c].sols[t]->Clear();
-					table[c].sols[t]->Add(n);
-
+					TSudoku sub_level;
 					sub_level.Init(&sol[0][0], sol_need - 1);
+					auto sol_to_update = (&sub_level.sol[0][0]) + (table[c].sols[t] - &sol[0][0]);
+					sol_to_update->Clear();
+					sol_to_update->Add(n);
+
+#ifndef NDEBUG
+					{
+						TSource result;
+						ConvertToResult(&sub_level.sol, &result);
+					}
+#endif				
+					sols_count++;
+
+					if (sols_count % 1000000==0)
+					{
+						printf("Bruteforcing tested = %i millons\n", sols_count/1000000);
+					}
+
 					if (sub_level.Calculate(result))
 					{
-						Init(&sub_level.sol[0][0], sub_level.sol_need);
-						result = &sol;
-						return true;
+						TSource temp;
+						ConvertToResult(result, &temp);
+						if (ValidateSource(&temp, true))
+						{
+							Init(&sub_level.sol[0][0], sub_level.sol_need);
+							result = &sol;
+							return true;
+						}
 					}
-					else
+
+					if (first_level)
 					{
-						*table[c].sols[t] = temp;
+						total--;
+						printf("Bruteforcing remain nums = %i\n", total);
 					}
 				}
 		}
 	}
 	return false;
 }
-bool TSudoku::Calculate(TSolution* &result)
+bool TSudoku::Calculate(TSolution* &result, bool is_sublevel)
 {
 	assert(has_source);
 	do
 	{
 		int last_sol = sol_need;
-		if (false)
-		{
-			if (!InitCellsSolutions())
-				return false;
-		}
-		else
 		{
 			for (int i = 0; i < SIZE; i++)
 			{
@@ -463,7 +600,8 @@ bool TSudoku::Calculate(TSolution* &result)
 					if (sol[i][k].high > 0)
 					{
 						InitCellSolutions(i, k);
-						if (sol[i][k].high == 0)sol_need--;
+						if (sol[i][k].high == 0)
+							sol_need--;
 						if (sol[i][k].high == -1)
 							return false;
 					}
@@ -477,6 +615,13 @@ bool TSudoku::Calculate(TSolution* &result)
 			ValidateCols();
 		if (last_sol == sol_need)
 			ValidateQuads();
+		if (!is_sublevel)
+		{
+			if (last_sol == sol_need)
+				NakedInColumns();
+			if (last_sol == sol_need)
+				NakedInRows();
+		}
 		for (int i = 0; i < 9; i++)
 		{
 			for (int k = 0; k < 9; k++)
@@ -484,7 +629,7 @@ bool TSudoku::Calculate(TSolution* &result)
 					return false;
 		}
 		if (last_sol == sol_need)
-			return BuildSubLevel(result);
+			return BuildSubLevel(result, !is_sublevel);
 	} while (sol_need != 0);
 	result = &sol;
 	return true;
@@ -505,7 +650,7 @@ bool TSudoku::ValidateSourceInBigCell(TSource* source, int num, int i, int k)
 			{
 				if (exists)
 				{
-					swprintf(buf, 256, L"Repeating value in small quad: row = %i, col = %i", ii, kk);
+					//swprintf(buf, 256, L"Repeating value in small quad: row = %i, col = %i", ii, kk);
 					return false;
 				}
 				else exists = true;
@@ -526,14 +671,14 @@ bool TSudoku::ValidateSource(TSource* source, bool check_zero)
 			{
 				if ((*source)[i][c] == 0 && check_zero)
 				{
-					swprintf(buf, 256, L"Zero in result: row = %i, col = %i", i, c);
+					//swprintf(buf, 256, L"Zero in result: row = %i, col = %i", i, c);
 					return false;
 				}
 				if ((*source)[i][c] != 0 && (*source)[i][c] == n)
 				{
 					if (exists)
 					{
-						swprintf(buf, 256, L"Repeating value \"%i\" in col = %i", (*source)[i][c], c);
+						//swprintf(buf, 256, L"Repeating value \"%i\" in col = %i", (*source)[i][c], c);
 						return false;
 					}
 					else exists = true;
@@ -545,7 +690,7 @@ bool TSudoku::ValidateSource(TSource* source, bool check_zero)
 				{
 					if (exists)
 					{
-						swprintf(buf, 256, L"Repeating value \"%i\" in row = %i", (*source)[c][k], c);
+						//swprintf(buf, 256, L"Repeating value \"%i\" in row = %i", (*source)[c][k], c);
 						return false;
 					}
 					else exists = true;
@@ -580,12 +725,12 @@ bool TSudoku::CalculateIterations(TSource* source, TSource* result)
 	}
 	TSolution* r = NULL;
 
-		Init(source);
-		if (!Calculate(r))
-		{
-			std::cout << "Solution not found!";
-			return false;
-		}
+	Init(source);
+	if (!Calculate(r, false))
+	{
+		std::cout << "Solution not found!";
+		return false;
+	}
 
 	if (!r)
 		return false;

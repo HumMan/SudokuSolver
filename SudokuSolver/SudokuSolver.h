@@ -10,8 +10,11 @@ typedef int TSource[SIZE][SIZE];
 struct TSol
 {
 public:
+	///кол-во бит в маске - 1
 	int high;
+	///битовая маска для вариантов чисел в ячейке
 	unsigned int v;
+
 	TSol();
 	void Clear();
 	void Add(int val);
@@ -33,13 +36,14 @@ private:
 	int sol_need;
 	bool has_source;
 	void InitCellSolutions(int i, int k);
-	bool InitCellsSolutions();
 	void ValidateRow(int i);
 	void ValidateCol(int k);
 	void ValidateQuad(int i, int k);
 	void ValidateQuads();
 	void ValidateRows();
 	void ValidateCols();
+	void NakedInColumns();
+	void NakedInRows();
 	void RemoveNumFromRow(int i, int num, int exclude_min, int exclude_max);
 	void RemoveNumFromCol(int k, int num, int exclude_min, int exclude_max);
 	void ValidateQuadRowCol(int i, int k);
@@ -63,8 +67,8 @@ public:
 			high = -1;
 		}
 	};
-	bool BuildSubLevel(TSolution* &result);
-	bool Calculate(TSolution* &result);
+	bool BuildSubLevel(TSolution* &result, bool first_level = false);
+	bool Calculate(TSolution* &result, bool is_sublevel=true);
 	static bool ValidateSourceInBigCell(TSource* source, int num, int i, int k);
 	static bool ValidateSource(TSource* source, bool check_zero = false);
 	bool CalculateIterations(TSource* source, TSource* result);
